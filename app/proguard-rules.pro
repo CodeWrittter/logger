@@ -1,0 +1,5 @@
+-keep class com.phonelogger.models.** { *; }
+-keep class com.phonelogger.receivers.** { *; }
+-keep class com.phonelogger.services.** { *; }
+-keep class com.phonelogger.workers.** { *; }
+-dontwarn okhttp3.**

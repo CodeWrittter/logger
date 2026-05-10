@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhoneLogger</string>
+    <string name="accessibility_service_label">PhoneLogger Volume Trigger</string>
+
+    <!-- Navigation -->
+    <string name="nav_trigger">Trigger</string>
+    <string name="nav_sync">Sync</string>
+    <string name="nav_logging">Logging</string>
+    <string name="nav_data">Data</string>
+    <string name="nav_app">App Settings</string>
+
+    <!-- Trigger settings -->
+    <string name="trigger_dial_code">Dial Code</string>
+    <string name="trigger_nfc">NFC Tag</string>
+    <string name="trigger_volume">Volume Sequence</string>
+    <string name="trigger_shake">Shake Pattern</string>
+    <string name="btn_test">Test</string>
+    <string name="btn_write_nfc">Write NFC Tag</string>
+    <string name="btn_read_nfc">Read NFC Tag</string>
+    <string name="btn_configure">Configure</string>
+
+    <!-- Sync settings -->
+    <string name="sync_frequency">Sync Frequency</string>
+    <string name="sync_every_12h">Every 12 hours</string>
+    <string name="sync_every_24h">Every 24 hours</string>
+    <string name="sync_manual">Manual only</string>
+    <string name="sync_now">Sync Now</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_failed">Connection failed</string>
+    <string name="status_untested">Not tested</string>
+
+    <!-- Data settings -->
+    <string name="export_json">Export as JSON</string>
+    <string name="wipe_local_db">Wipe Local DB</string>
+    <string name="wipe_confirm_title">Confirm Wipe</string>
+    <string name="wipe_confirm_message">This will permanently delete all local records. This cannot be undone. Continue?</string>
+    <string name="download_all">Download All Data</string>
+
+    <!-- App settings -->
+    <string name="rerun_setup">Re-run Setup Wizard</string>
+    <string name="deactivate_admin">Deactivate Device Admin</string>
+    <string name="show_icon">Show Launcher Icon</string>
+    <string name="deactivate_admin_warning">This will allow the app to be uninstalled. Are you sure?</string>
+    <string name="show_icon_warning">This will make PhoneLogger visible in the app drawer. Continue?</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="hide">Hide</string>
+    <string name="export">Export</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Initial Setup</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="device_admin_explanation">Required to keep this app running and prevent accidental removal.</string>
+</resources>

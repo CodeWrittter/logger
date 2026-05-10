@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/screen_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="24dp">
+
+        <!-- ─── Header ──────────────────────────────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Triggers"
+                android:textColor="@color/text_primary"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PhoneLogger · Choose how to launch the app"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- ─── ACCESS METHODS ─────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ACCESS METHODS"
+            android:textColor="@color/section_label"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp" />
+
+        <!-- Access Methods card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:marginStart="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/card_bg">
+
+            <!-- Row: Dial Code -->
+            <LinearLayout
+                android:id="@+id/row_dial"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/icon_bg_blue">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_hash"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:text="Dial Code"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_dial_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_dial"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:trackTint="@color/switch_track_tint"
+                    app:thumbTint="@color/switch_thumb_tint" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="66dp"
+                android:background="@color/divider" />
+
+            <!-- Row: NFC Tag -->
+            <LinearLayout
+                android:id="@+id/row_nfc"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/icon_bg_purple">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nfc"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:text="NFC Tag"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_nfc_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_nfc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:trackTint="@color/switch_track_tint"
+                    app:thumbTint="@color/switch_thumb_tint" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="66dp"
+                android:background="@color/divider" />
+
+            <!-- Row: Volume Sequence -->
+            <LinearLayout
+                android:id="@+id/row_volume"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/icon_bg_orange">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_brightness"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:text="Volume Sequence"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_volume_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_volume"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:trackTint="@color/switch_track_tint"
+                    app:thumbTint="@color/switch_thumb_tint" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="66dp"
+                android:background="@color/divider" />
+
+            <!-- Row: Shake Pattern -->
+            <LinearLayout
+                android:id="@+id/row_shake"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/icon_bg_cyan">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_waves"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:text="Shake Pattern"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_shake_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_shake"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:trackTint="@color/switch_track_tint"
+                    app:thumbTint="@color/switch_thumb_tint" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Helper text -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="10dp"
+            android:text="At least one trigger must be configured before the launcher icon can be hidden."
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:lineSpacingMultiplier="1.3" />
+
+        <!-- ─── DIAL CODE section ───────────────────────────────────────── -->
+        <TextView
+            android:id="@+id/label_dial_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DIAL CODE"
+            android:textColor="@color/section_label"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:paddingStart="20dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/card_dial_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg">
+
+            <!-- Code row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Code"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_dial_code_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="16dp"
+                android:background="@color/divider" />
+
+            <!-- Test Dial Code row -->
+            <LinearLayout
+                android:id="@+id/btn_test_dial"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Test Dial Code"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Test"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ─── NFC TAG section ────────────────────────────────────────── -->
+        <TextView
+            android:id="@+id/label_nfc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NFC TAG"
+            android:textColor="@color/section_label"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:paddingStart="20dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/card_nfc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg">
+
+            <!-- Write row -->
+            <LinearLayout
+                android:id="@+id/btn_write_nfc"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Write New Tag"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Write"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="16dp"
+                android:background="@color/divider" />
+
+            <!-- Scan row -->
+            <LinearLayout
+                android:id="@+id/btn_scan_nfc"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Scan Existing Tag"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scan"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ─── VOLUME SEQUENCE section (hidden when toggle off) ──────── -->
+        <TextView
+            android:id="@+id/label_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VOLUME SEQUENCE"
+            android:textColor="@color/section_label"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:paddingStart="20dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/card_volume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sequence Pattern"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tv_volume_pattern"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ─── SHAKE PATTERN section (hidden when toggle off) ───────── -->
+        <TextView
+            android:id="@+id/label_shake"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SHAKE PATTERN"
+            android:textColor="@color/section_label"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:paddingStart="20dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/card_shake"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sensitivity"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tv_shake_sensitivity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/blue_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

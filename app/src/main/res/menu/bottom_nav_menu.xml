@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_trigger"
+        android:icon="@drawable/ic_nav_trigger"
+        android:title="Trigger" />
+    <item
+        android:id="@+id/nav_sync"
+        android:icon="@drawable/ic_nav_sync"
+        android:title="Sync" />
+    <item
+        android:id="@+id/nav_logging"
+        android:icon="@drawable/ic_nav_logging"
+        android:title="Logging" />
+    <item
+        android:id="@+id/nav_data"
+        android:icon="@drawable/ic_nav_data"
+        android:title="Data" />
+    <item
+        android:id="@+id/nav_app"
+        android:icon="@drawable/ic_nav_app"
+        android:title="App" />
+</menu>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PhoneLogger" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/blue_accent</item>
+        <item name="colorPrimaryVariant">@color/screen_bg</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/blue_accent</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:statusBarColor">@color/screen_bg</item>
+        <item name="android:windowBackground">@color/screen_bg</item>
+        <!-- BottomNavigationView active indicator transparent (we use icon tint only) -->
+        <item name="colorSurface">@color/nav_bg</item>
+    </style>
+
+    <style name="Theme.PhoneLogger.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Full-screen black theme for the lock/PIN screen -->
+    <style name="Theme.PhoneLogger.Lock" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="colorPrimary">#000000</item>
+    </style>
+</resources>
