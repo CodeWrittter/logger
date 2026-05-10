@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String DB_NAME = "phonelogger.db";
+    public static final String DB_NAME = "phonelogger.db";
     private static final int DB_VERSION = 1;
 
     private static DatabaseHelper instance;

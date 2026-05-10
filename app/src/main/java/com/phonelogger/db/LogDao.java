@@ -305,6 +305,20 @@ public class LogDao {
         return list;
     }
 
+    // ─── Per-table counts ─────────────────────────────────────────────────────
+
+    public int getCount(String table) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + table, null);
+        int n = c.moveToFirst() ? c.getInt(0) : 0;
+        c.close();
+        return n;
+    }
+
+    public long getDbSizeBytes(Context context) {
+        return context.getDatabasePath(DatabaseHelper.DB_NAME).length();
+    }
+
     // ─── Stats ────────────────────────────────────────────────────────────────
 
     public int getTotalRecordCount() {

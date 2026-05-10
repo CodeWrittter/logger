@@ -1,0 +1,8 @@
+git commit -m "$(cat <<'EOF'
+Initial commit: PhoneLogger Android app
+
+Full project scaffold including SQLite DB, 10 logging receivers/workers,
+Supabase sync, PIN lock screen, and Trigger/Sync/Logging tab UI.
+
+EOF
+)"

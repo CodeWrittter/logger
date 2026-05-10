@@ -59,4 +59,42 @@ public class SupabaseClient {
             return false;
         }
     }
+
+    // Returns round-trip time in ms, or -1 on failure.
+    public long measurePing() {
+        Request request = new Request.Builder()
+                .url(baseUrl + "/rest/v1/")
+                .get()
+                .addHeader("apikey", anonKey)
+                .addHeader("Authorization", "Bearer " + anonKey)
+                .build();
+        long start = System.currentTimeMillis();
+        try (Response response = client.newCall(request).execute()) {
+            return response.isSuccessful() ? System.currentTimeMillis() - start : -1;
+        } catch (IOException e) {
+            return -1;
+        }
+    }
+
+    // Returns total row count for a table via Supabase's count=exact, or -1 on failure.
+    public long getRemoteCount(String table) {
+        Request request = new Request.Builder()
+                .url(baseUrl + "/rest/v1/" + table + "?select=*")
+                .head()
+                .addHeader("apikey", anonKey)
+                .addHeader("Authorization", "Bearer " + anonKey)
+                .addHeader("Prefer", "count=exact")
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) return -1;
+            String range = response.header("Content-Range");
+            if (range == null) return -1;
+            // format: 0-24/12492
+            int slash = range.indexOf('/');
+            if (slash < 0) return -1;
+            return Long.parseLong(range.substring(slash + 1));
+        } catch (IOException | NumberFormatException e) {
+            return -1;
+        }
+    }
 }
