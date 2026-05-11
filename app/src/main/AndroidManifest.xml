@@ -71,6 +71,20 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.PhoneLogger" />
 
+        <!-- Disabled-by-default launcher alias; toggled by the App tab -->
+        <activity-alias
+            android:name=".ui.LauncherAlias"
+            android:targetActivity=".ui.LockActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- Secret dial code receiver. Host matches default *#00000# — change in secrets.xml -->
         <receiver
             android:name=".receivers.SecretCodeReceiver"

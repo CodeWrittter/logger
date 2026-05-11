@@ -287,8 +287,8 @@ Each of these requires manual navigation. The app provides "Go to Settings" butt
 ### 1. Clone the project
 
 ```bash
-git clone https://github.com/yourname/PhoneLogger.git
-cd PhoneLogger
+git clone https://github.com/CodeWrittter/logger.git
+cd logger
 ```
 
 ### 2. Create `secrets.xml`
