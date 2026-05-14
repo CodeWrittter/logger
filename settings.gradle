@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PhoneLogger"
+rootProject.name = "UsageInsights"
 include ':app'

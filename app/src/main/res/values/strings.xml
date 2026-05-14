@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PhoneLogger</string>
-    <string name="accessibility_service_label">PhoneLogger Volume Trigger</string>
+    <string name="app_name">Usage Insights</string>
+    <string name="accessibility_service_label">Input Accessibility</string>
 
     <!-- Navigation -->
     <string name="nav_trigger">Trigger</string>
@@ -43,7 +43,7 @@
     <string name="deactivate_admin">Deactivate Device Admin</string>
     <string name="show_icon">Show Launcher Icon</string>
     <string name="deactivate_admin_warning">This will allow the app to be uninstalled. Are you sure?</string>
-    <string name="show_icon_warning">This will make PhoneLogger visible in the app drawer. Continue?</string>
+    <string name="show_icon_warning">This will make the app visible in the app drawer. Continue?</string>
 
     <!-- General -->
     <string name="ok">OK</string>

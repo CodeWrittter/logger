@@ -35,7 +35,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PhoneLogger · Choose how to launch the app"
+                android:text="Usage Insights · Manage app launch methods"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:layout_marginTop="2dp" />
@@ -218,59 +218,6 @@
                     app:thumbTint="@color/switch_thumb_tint" />
             </LinearLayout>
 
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_marginStart="66dp"
-                android:background="@color/divider" />
-
-            <!-- Row: Shake Pattern -->
-            <LinearLayout
-                android:id="@+id/row_shake"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <FrameLayout
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="@drawable/icon_bg_cyan">
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_waves"
-                        android:contentDescription="@null" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="14dp"
-                    android:text="Shake Pattern"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/tv_shake_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="15sp" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_shake"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:trackTint="@color/switch_track_tint"
-                    app:thumbTint="@color/switch_thumb_tint" />
-            </LinearLayout>
         </LinearLayout>
 
         <!-- Helper text -->
@@ -280,7 +227,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="10dp"
-            android:text="At least one trigger must be configured before the launcher icon can be hidden."
+            android:text="At least one option must be enabled."
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:lineSpacingMultiplier="1.3" />
@@ -487,12 +434,16 @@
             android:visibility="gone">
 
             <LinearLayout
+                android:id="@+id/row_volume_pattern"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -504,56 +455,14 @@
                     android:id="@+id/tv_volume_pattern"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
                     android:textColor="@color/blue_accent"
                     android:textSize="16sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- ─── SHAKE PATTERN section (hidden when toggle off) ───────── -->
-        <TextView
-            android:id="@+id/label_shake"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SHAKE PATTERN"
-            android:textColor="@color/section_label"
-            android:textSize="12sp"
-            android:textAllCaps="true"
-            android:letterSpacing="0.08"
-            android:paddingStart="20dp"
-            android:paddingTop="24dp"
-            android:paddingBottom="8dp"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/card_shake"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:orientation="vertical"
-            android:background="@drawable/card_bg"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Sensitivity"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
-                <TextView
-                    android:id="@+id/tv_shake_sensitivity"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/blue_accent"
-                    android:textSize="16sp" />
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="@null" />
             </LinearLayout>
         </LinearLayout>
 

