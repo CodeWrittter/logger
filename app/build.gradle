@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.usageinsights'
+    namespace 'com.usage.insights'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.usageinsights"
+        applicationId "com.usage.insights"
         minSdk 28
         targetSdk 35
         versionCode 1

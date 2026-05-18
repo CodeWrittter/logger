@@ -176,9 +176,9 @@
             android:orientation="vertical"
             android:background="@drawable/card_bg">
 
-            <!-- Every 12 hours -->
+            <!-- Every 1 hour -->
             <LinearLayout
-                android:id="@+id/row_12h"
+                android:id="@+id/row_1h"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:orientation="horizontal"
@@ -193,12 +193,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Every 12 hours"
+                    android:text="Every 1 hour"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
                 <ImageView
-                    android:id="@+id/check_12h"
+                    android:id="@+id/check_1h"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_check"
@@ -212,9 +212,9 @@
                 android:layout_marginStart="16dp"
                 android:background="@color/divider" />
 
-            <!-- Every 24 hours -->
+            <!-- Every 3 hours -->
             <LinearLayout
-                android:id="@+id/row_24h"
+                android:id="@+id/row_3h"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:orientation="horizontal"
@@ -229,12 +229,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Every 24 hours"
+                    android:text="Every 3 hours"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
                 <ImageView
-                    android:id="@+id/check_24h"
+                    android:id="@+id/check_3h"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_check"
