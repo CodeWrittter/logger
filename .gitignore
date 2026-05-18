@@ -1,13 +1,3 @@
-*.iml
-.gradle
-/local.properties
-/.idea
+# Repo-level ignores — each subproject has its own .gitignore
 .DS_Store
-/build
-app/build/
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-
-app/src/main/res/values/secrets.xml
+.idea/

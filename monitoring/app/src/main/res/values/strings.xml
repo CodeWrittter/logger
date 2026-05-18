@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Usage Monitor</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Tab labels -->
+    <string name="tab_today">Today</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_activity">Activity</string>
+    <string name="tab_device">Device</string>
+
+    <!-- Settings -->
+    <string name="label_supabase_url">Supabase URL</string>
+    <string name="label_supabase_key">Anon Key</string>
+    <string name="action_save">Save</string>
+    <string name="action_ping">Ping</string>
+    <string name="action_refresh">Refresh</string>
+</resources>

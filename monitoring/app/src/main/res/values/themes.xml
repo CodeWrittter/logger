@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.UsageMonitor" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/color_screen_time</item>
+        <item name="colorPrimaryVariant">@color/monitor_surface</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/color_calls</item>
+        <item name="colorSecondaryVariant">@color/monitor_surface</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/monitor_background</item>
+        <item name="android:statusBarColor">@color/monitor_background</item>
+        <item name="android:navigationBarColor">@color/monitor_background</item>
+    </style>
+</resources>

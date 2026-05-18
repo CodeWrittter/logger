@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="4dp">
+
+    <ImageView
+        android:id="@+id/img_app_icon"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:background="@drawable/bg_app_icon"
+        android:backgroundTint="@color/color_calls"
+        android:padding="5dp"
+        android:scaleType="centerInside" />
+
+    <TextView
+        android:id="@+id/text_app_name"
+        android:layout_width="52dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:text="What..."
+        android:textColor="@color/monitor_on_surface_medium"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <!-- Java populates 24 cell Views here -->
+    <LinearLayout
+        android:id="@+id/container_heatmap"
+        android:layout_width="0dp"
+        android:layout_height="16dp"
+        android:layout_weight="1"
+        android:layout_marginStart="4dp"
+        android:orientation="horizontal" />
+
+</LinearLayout>

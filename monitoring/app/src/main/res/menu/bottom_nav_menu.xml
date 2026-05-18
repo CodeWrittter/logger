@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_today"
+        android:icon="@android:drawable/ic_menu_today"
+        android:title="@string/tab_today" />
+
+    <item
+        android:id="@+id/nav_apps"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/tab_apps" />
+
+    <item
+        android:id="@+id/nav_activity"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        android:title="@string/tab_activity" />
+
+    <item
+        android:id="@+id/nav_device"
+        android:icon="@android:drawable/ic_dialog_alert"
+        android:title="@string/tab_device" />
+
+</menu>

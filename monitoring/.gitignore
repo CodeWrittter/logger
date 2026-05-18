@@ -1,0 +1,17 @@
+# IDE
+*.iml
+.idea/
+.DS_Store
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# Android build artifacts
+/captures
+.externalNativeBuild/
+.cxx/
+
+# Secrets — never commit
+app/src/main/res/values/secrets.xml

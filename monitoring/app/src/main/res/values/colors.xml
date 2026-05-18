@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- ── Monitor dark theme surfaces ── -->
+    <color name="monitor_background">#111111</color>
+    <color name="monitor_surface">#1E1E1E</color>
+    <color name="monitor_on_surface">#FFFFFF</color>
+    <color name="monitor_on_surface_medium">#ABABAB</color>
+    <color name="monitor_on_surface_low">#666666</color>
+    <color name="chart_placeholder_bg">#161E28</color>
+
+    <!-- ── Stat card accent colors ── -->
+    <color name="color_screen_time">#2196F3</color>
+    <color name="color_notifications">#F44336</color>
+    <color name="color_calls">#4CAF50</color>
+    <color name="color_sms">#FF9800</color>
+
+    <!-- ── Delta indicators ── -->
+    <color name="color_delta_positive">#4CAF50</color>
+    <color name="color_delta_negative">#F44336</color>
+</resources>
